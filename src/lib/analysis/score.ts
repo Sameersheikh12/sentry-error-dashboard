@@ -160,14 +160,24 @@ export function explainProblem(
       )
       break
     case 'CHRONIC': {
-      // A problem running at a tenth of its usual rate is not "steady". Nothing here is worth
-      // acting on, but the words still have to match the number in the rate column.
-      const quietBar = options.surgeThreshold > 0 ? 1 / options.surgeThreshold : 0
-      const fell =
-        aggregate.surgeMultiplier !== null && aggregate.surgeMultiplier <= quietBar
+      // Nothing here is worth acting on, but the words still have to match the multiplier shown
+      // beside them: a problem at a tenth or double its usual rate is not "steady". The bar is
+      // the square root of the surge threshold, which is symmetric in the space ratios live in
+      // and needs no separate knob.
+      const notable = options.surgeThreshold > 1 ? Math.sqrt(options.surgeThreshold) : Infinity
+      const multiplier = aggregate.surgeMultiplier
+      const moved =
+        multiplier === null
+          ? null
+          : multiplier >= notable
+            ? 'up to'
+            : multiplier <= 1 / notable
+              ? 'down to'
+              : null
+
       clauses.push(
-        fell
-          ? `down to ${formatRate(aggregate.currentRate)} from ${formatRate(aggregate.baselineRate)}`
+        moved
+          ? `${moved} ${formatRate(aggregate.currentRate)} from ${formatRate(aggregate.baselineRate)}`
           : `steady at ${formatRate(aggregate.currentRate)}`,
       )
       break

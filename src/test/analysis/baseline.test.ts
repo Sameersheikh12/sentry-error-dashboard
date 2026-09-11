@@ -110,3 +110,29 @@ describe('chronic wording', () => {
     expect(analyze([flat])[0].reason).toContain('steady')
   })
 })
+
+describe('chronic wording matches the multiplier beside it', () => {
+  const chronicAt = (currentEvents: number, baselineEvents: number) =>
+    analyze([
+      snapshot({
+        firstSeen: NOW - 60 * 24 * MS_PER_HOUR,
+        currentEvents,
+        baselineEvents,
+        userCount: 20,
+      }),
+    ])[0]
+
+  it('names a rise that does not clear the surge bar', () => {
+    // ~2.2x: not a surge, but calling it "steady" contradicts the rate column.
+    const problem = chronicAt(530, 1_440)
+    expect(problem.state).toBe('CHRONIC')
+    expect(problem.reason).toContain('up to')
+    expect(problem.reason).not.toContain('steady')
+  })
+
+  it('still calls a genuinely flat rate steady', () => {
+    const problem = chronicAt(240, 1_440)
+    expect(problem.state).toBe('CHRONIC')
+    expect(problem.reason).toContain('steady')
+  })
+})

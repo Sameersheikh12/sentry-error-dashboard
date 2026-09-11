@@ -31,7 +31,10 @@ npm run dev
 | `SENTRY_API_BASE_URL` | no | Defaults to `https://sentry.io`; some orgs need `us.`/`de.` |
 | `SENTRY_DEFAULT_PROJECT` | no | Numeric project id to open by default |
 
-Commands: `npm run dev` · `npm run build` · `npm test` · `npm run lint`
+Commands: `npm run dev` · `npm run build` · `npm test` · `npm run lint` · `npm run typecheck`
+
+CI runs all four on every push and pull request. The build step deliberately runs **without
+secrets** — that is what keeps the app buildable from a clean clone.
 
 ## How a problem is classified
 
@@ -124,7 +127,7 @@ src/lib/analysis/     pure: aggregate, classify, group, extract, score, timeline
 src/lib/dashboard/    joins the two: adapter, URL filters, load-dashboard
 src/lib/config/       every tunable; env parsing; startup guards
 src/components/       presentation
-src/test/analysis/    64 unit tests over the pure layer
+src/test/            93 unit tests: the analysis layer, plus the security and URL modules
 ```
 
 Three rules hold it together:
@@ -181,6 +184,9 @@ header, so a cached render shows its true age.
 Invariants run over every row (`users ≤ events`, `lastSeen` inside the window). A row that fails
 one is withheld and logged rather than displayed — a wrong number here is indistinguishable from a
 right one.
+
+The claims in this section and the next are covered by tests in `src/test/security/`, so they can
+be checked by running the suite rather than by reading the code.
 
 ## Security
 
