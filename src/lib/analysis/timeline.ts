@@ -1,4 +1,4 @@
-import { emptyStateCounts, type IssueState, type Problem } from './types'
+import type { IssueState, Problem } from './types'
 
 export interface TimelineSeries {
   key: string

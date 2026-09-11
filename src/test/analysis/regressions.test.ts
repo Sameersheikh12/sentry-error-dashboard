@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeCulprit, scrubTitle } from '@/lib/analysis/normalize'
-import { NOW, analyze, analyzeFull, snapshot, withHistory } from './fixtures'
+import { analyze, analyzeFull, snapshot, withHistory } from './fixtures'
 
 describe('FADING reaches the reader', () => {
   it('is not filed below the signal threshold', () => {
