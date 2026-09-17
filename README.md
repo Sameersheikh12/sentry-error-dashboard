@@ -1,15 +1,17 @@
 # Sentry Triage
 
-Ranks your Sentry errors by **what changed**, not by volume — and reads the ones that matter with
-a local Claude Code agent, so the upstream cause (usually buried in `extra.logs`, never in the
-title) shows up without opening Sentry.
+A local Claude Code agent reads your Sentry errors and tells you what they actually mean — the
+upstream cause, usually buried in `extra.logs` and never in the title. Problems are ranked by
+**what changed**, not by volume, so the agent reads the ones worth its time first.
 
 ## Requirements
 
-- Node 20+
-- A Sentry auth token (`project:read`, `event:read`)
-- Optional, for the agent panel: [Claude Code](https://claude.com/claude-code) installed and
-  logged in, with the Sentry MCP connector enabled — see [docs/agent.md](docs/agent.md#setup)
+This is not a Sentry viewer with an extra panel bolted on — reading the actual error, not just
+ranking it, is the point of the project. Both of these are required:
+
+- Node 20+ and a Sentry auth token (`project:read`, `event:read`)
+- [Claude Code](https://claude.com/claude-code) installed and logged in, with the Sentry MCP
+  connector enabled — see [docs/agent.md](docs/agent.md#setup)
 
 ## Quick start
 
@@ -19,9 +21,14 @@ cp .env.example .env.local     # fill in SENTRY_AUTH_TOKEN and SENTRY_ORG
 npm run dev
 ```
 
-Open `http://localhost:3000`. The dashboard, ranking and chart work immediately. The **agent
-panel** additionally needs Claude Code set up (above) — without it, the panel shows an error and
-everything else still works.
+Open `http://localhost:3000`. Both requirements above need to be met for this to be what it's
+meant to be — the ranking is only half the value; the agent reading the actual event is the other
+half, and the reason this exists instead of a Sentry saved search.
+
+If the agent isn't reachable (Claude not installed, not logged in, MCP not connected), the page
+doesn't go blank — the ranking and chart still render, and the panel names exactly what's missing
+instead of failing silently. That's a resilience property, not a suggestion that the agent is
+optional. See [Troubleshooting](#troubleshooting).
 
 ## Configuration
 
@@ -70,11 +77,12 @@ full `devDetail` (withheld from the client in production).
 
 ## How it works
 
+- **A local Claude Code agent reads the real event** — `src/lib/agent/`, over the Sentry MCP,
+  because the title is usually the least informative field on it. This is what the project is
+  for. Details, setup, cost and caching: [docs/agent.md](docs/agent.md).
 - **Ranking is deterministic** — `src/lib/analysis/`, pure TypeScript, 100+ unit tests, no
-  external "expected errors" list to go stale. Details: [docs/ranking.md](docs/ranking.md).
-- **Explanations come from a local Claude Code agent** — `src/lib/agent/`, reads the real event
-  over the Sentry MCP because the title is usually the least informative field on it. Details,
-  setup, cost and caching: [docs/agent.md](docs/agent.md).
+  external "expected errors" list to go stale. It exists so the agent is told what to read instead
+  of burning turns rediscovering it. Details: [docs/ranking.md](docs/ranking.md).
 - **Also usable as a Claude Code skill** with no server at all —
   [docs/agent.md#also-usable-as-a-claude-code-skill](docs/agent.md#also-usable-as-a-claude-code-skill).
 
