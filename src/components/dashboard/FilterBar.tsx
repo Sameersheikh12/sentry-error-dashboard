@@ -9,6 +9,7 @@ import {
   SORT_KEYS,
   activeFilterCount,
   clearedFilters,
+  describeActiveFilters,
   filtersToQueryString,
   withFilter,
   type DashboardFilters,
@@ -16,6 +17,7 @@ import {
 } from '@/lib/dashboard/filters'
 import type { ProjectOption } from '@/lib/dashboard/load-projects'
 import {
+  CONTROL_DIVIDER,
   CONTROL_SELECT,
   FAINT_TEXT,
   PILL_ACTIVE,
@@ -91,6 +93,7 @@ export function FilterBar({
   }
 
   const activeCount = activeFilterCount(filters)
+  const appliedFilters = describeActiveFilters(filters)
 
   // Include whatever is actually in force, even if this project does not define it, or the select
   // would fall back to its first option and report an environment that is not being applied.
@@ -121,7 +124,10 @@ export function FilterBar({
     }
 
   return (
-    <div className="space-y-2">
+    <div
+      className={`space-y-2 transition-opacity ${isPending ? 'opacity-60' : ''}`}
+      aria-busy={isPending}
+    >
       <div className="flex flex-wrap items-center gap-2">
         {projects.length > 0 && (
           <select
@@ -162,14 +168,17 @@ export function FilterBar({
           onApply={go}
         />
 
+        <span aria-hidden className={CONTROL_DIVIDER} />
+
         <input
           type="search"
           key={`search:${filters.search ?? ''}`}
           defaultValue={filters.search ?? ''}
           onKeyDown={submitText('search')}
-          placeholder="search… (enter)"
-          className={`${CONTROL_SELECT} w-44`}
-          aria-label="Search problems and issue titles"
+          placeholder="filter rows by text… (enter)"
+          title="Filters the problems already on this page by title or key. Local — no Sentry query, no cost."
+          className={`${CONTROL_SELECT} w-52`}
+          aria-label="Filter the rows on this page by text"
         />
 
         <input
@@ -177,10 +186,14 @@ export function FilterBar({
           key={`release:${filters.release ?? ''}`}
           defaultValue={filters.release ?? ''}
           onKeyDown={submitText('release')}
-          placeholder="release… (enter)"
-          className={`${CONTROL_SELECT} w-36`}
-          aria-label="Filter by release"
+          placeholder="release version… (enter)"
+          title="Asks Sentry for this release only. Unlike the text box, this changes the query and refetches."
+          className={`${CONTROL_SELECT} w-44`}
+          aria-label="Ask Sentry for one release only"
         />
+
+        {/* Display controls sit apart: they change how the same data is presented, not which. */}
+        <span aria-hidden className={`${CONTROL_DIVIDER} sm:ml-auto`} />
 
         <select
           value={filters.sort}
@@ -214,6 +227,30 @@ export function FilterBar({
           title="Show or hide the volume chart"
         />
       </div>
+
+      {appliedFilters.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className={`text-[11px] font-semibold uppercase tracking-wide ${FAINT_TEXT}`}>
+            Applied
+          </span>
+          {appliedFilters.map((filter) => (
+            <button
+              key={filter.id}
+              type="button"
+              onClick={() => go(filter.clear)}
+              title={`Remove ${filter.label} ${filter.value}`}
+              className={`${PILL_BASE} ${PILL_ACTIVE} max-w-[18rem]`}
+            >
+              <span className="text-slate-300 dark:text-slate-600">{filter.label}</span>
+              <span className="truncate">{filter.value}</span>
+              <span aria-hidden className="opacity-60">
+                ×
+              </span>
+              <span className="sr-only">Remove this filter</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <span className={`text-[11px] font-semibold uppercase tracking-wide ${FAINT_TEXT}`}>

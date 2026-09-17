@@ -1,8 +1,12 @@
+import { BACKGROUND_STATES } from '@/lib/analysis/types'
+import { AgentPanel } from '@/components/dashboard/AgentPanel'
+import { agentConfig, agentTimeoutSeconds } from '@/lib/config/agent.config'
 import { DiagnosticsPanel } from '@/components/dashboard/DiagnosticsPanel'
 import { ErrorState } from '@/components/dashboard/ErrorState'
 import { FilterBar } from '@/components/dashboard/FilterBar'
 import { OverviewBand } from '@/components/dashboard/OverviewBand'
 import { ProblemTable } from '@/components/dashboard/ProblemTable'
+import { StateLegend } from '@/components/dashboard/StateLegend'
 import { TimelineChart } from '@/components/dashboard/TimelineChart'
 import { VerdictHeadline } from '@/components/dashboard/VerdictHeadline'
 import {
@@ -11,7 +15,7 @@ import {
   WARNING_SURFACE,
   WARNING_TEXT,
 } from '@/components/dashboard/controls'
-import { WINDOW_PRESETS } from '@/lib/config/analysis.config'
+import { WINDOW_PRESETS, analysisConfig } from '@/lib/config/analysis.config'
 import { serverEnvironment } from '@/lib/config/env'
 import { unauthenticatedProduction } from '@/lib/config/guard'
 import {
@@ -20,6 +24,7 @@ import {
   parseFilters,
   type DashboardFilters,
 } from '@/lib/dashboard/filters'
+import { filtersToQueryString } from '@/lib/dashboard/filters'
 import { loadDashboard, type BaselineDescription } from '@/lib/dashboard/load-dashboard'
 import { loadProjects, resolveProject, type ProjectOption } from '@/lib/dashboard/load-projects'
 import { describeFailure } from '@/lib/failure'
@@ -101,7 +106,7 @@ export default async function Page({ searchParams }: PageProps<'/'>) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-screen-2xl space-y-5 p-4 pb-24 sm:p-6 sm:pb-24">
+    <main className="mx-auto w-full max-w-screen-2xl space-y-8 p-4 pb-24 sm:p-6 sm:pb-24">
       {unauthenticatedProduction() && (
         <p className={`rounded border-2 px-4 py-2 text-sm font-semibold ${DANGER_SURFACE}`}>
           Running in production with no access gate. This page exposes a Sentry token with
@@ -132,8 +137,8 @@ export default async function Page({ searchParams }: PageProps<'/'>) {
 
       {dashboard?.ok && dashboard.value.windowPrecedesRetention && (
         <p className="rounded border border-amber-500/50 bg-amber-500/5 px-4 py-2 text-sm text-amber-800 dark:text-amber-200">
-          This window reaches past Sentry&apos;s {Math.round(dashboard.value.baseline.hours / 24)}-day
-          retention. Anything before then is missing rather than quiet.
+          This window reaches past Sentry&apos;s {analysisConfig.retentionDays}-day retention.
+          Anything before then is missing rather than quiet.
         </p>
       )}
 
@@ -159,24 +164,46 @@ export default async function Page({ searchParams }: PageProps<'/'>) {
         />
       ) : dashboard.ok ? (
         <>
-          <VerdictHeadline
-            worthLooking={dashboard.value.problems.length}
-            belowThreshold={dashboard.value.lowSignalProblems.length}
-            problemStateCounts={dashboard.value.overview.problemStateCounts}
-            windowLabel={labels.verdict}
-            baselineNote={describeBaseline(dashboard.value.baseline)}
-            fetchedAt={dashboard.value.fetchedAt}
-            issuesScanned={dashboard.value.diagnostics.issuesScanned}
-            truncated={dashboard.value.truncated}
-          />
-          <OverviewBand
-            events={dashboard.value.overview.events}
-            users={dashboard.value.overview.users}
-            problemStateCounts={dashboard.value.overview.problemStateCounts}
-            windowLabel={labels.comparison}
-            comparable={dashboard.value.previousPeriodAvailable}
-          />
-          {filters.showChart && <TimelineChart timeline={dashboard.value.timeline} />}
+          {/* The answer, and the agent's reading of it. These belong together. */}
+          <section className="space-y-3">
+            <VerdictHeadline
+              worthLooking={dashboard.value.problems.length}
+              needingAttention={
+                dashboard.value.problems.filter(
+                  (problem) => !BACKGROUND_STATES.includes(problem.state),
+                ).length
+              }
+              belowThreshold={dashboard.value.lowSignalProblems.length}
+              problemStateCounts={dashboard.value.overview.problemStateCounts}
+              windowLabel={labels.verdict}
+              baselineNote={describeBaseline(dashboard.value.baseline)}
+              fetchedAt={dashboard.value.fetchedAt}
+              issuesScanned={dashboard.value.diagnostics.issuesScanned}
+              truncated={dashboard.value.truncated}
+            />
+            <AgentPanel
+              key={filtersToQueryString(resolvedFilters)}
+              query={filtersToQueryString(resolvedFilters)}
+              models={agentConfig.selectableModels}
+              efforts={agentConfig.selectableEfforts}
+              defaultModel={agentConfig.model}
+              defaultEffort={agentConfig.effort}
+              timeoutSeconds={agentTimeoutSeconds}
+            />
+          </section>
+
+          {/* The measurements behind it: totals, then the shape over time. */}
+          <section className="space-y-3">
+            <OverviewBand
+              events={dashboard.value.overview.events}
+              users={dashboard.value.overview.users}
+              problemStateCounts={dashboard.value.overview.problemStateCounts}
+              windowLabel={labels.comparison}
+              comparable={dashboard.value.previousPeriodAvailable}
+            />
+            {filters.showChart && <TimelineChart timeline={dashboard.value.timeline} />}
+          </section>
+
           <ProblemTable
             problems={dashboard.value.problems}
             lowSignalProblems={dashboard.value.lowSignalProblems}
@@ -184,10 +211,15 @@ export default async function Page({ searchParams }: PageProps<'/'>) {
             apiBaseUrl={apiBaseUrl()}
             filtersActive={activeFilterCount(filters) > 0}
           />
-          <DiagnosticsPanel
-            diagnostics={dashboard.value.diagnostics}
-            baselineHours={dashboard.value.baseline.hours}
-          />
+
+          {/* How to read the above. Reference, so it sits apart and recedes. */}
+          <section className="space-y-2">
+            <StateLegend />
+            <DiagnosticsPanel
+              diagnostics={dashboard.value.diagnostics}
+              baselineHours={dashboard.value.baseline.hours}
+            />
+          </section>
         </>
       ) : (
         <ErrorState error={describeFailure(dashboard.error).error} />

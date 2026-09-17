@@ -15,6 +15,24 @@ const CONTROL_BASE =
 
 export const CONTROL_SELECT = `${CONTROL_BASE} cursor-pointer`
 
+/**
+ * A select for a dense header rather than the filter row. Same colour rules as above and for the
+ * same reason — only the height and type scale differ.
+ */
+export const CONTROL_SELECT_SMALL =
+  'h-6 cursor-pointer rounded border border-slate-400/50 bg-transparent px-1 text-[11px] ' +
+  'text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:border-slate-500/50'
+
+/**
+ * A hairline between groups of controls that do different jobs. The filter row mixes three kinds
+ * of thing — what data to load, how to narrow it, how to display it — and without a boundary they
+ * read as one undifferentiated wall of eight controls.
+ */
+export const CONTROL_DIVIDER = 'hidden h-6 w-px shrink-0 self-center bg-slate-400/50 sm:block'
+
+/** Reference material rather than findings: dashed, matching the collapsed problem sections. */
+export const REFERENCE_SURFACE = 'rounded-lg border border-dashed border-slate-500/35'
+
 /** An opaque floating surface, painted from the theme so it never mismatches the page. */
 export const POPOVER_SURFACE =
   'rounded-md border border-slate-400/60 bg-background shadow-lg dark:border-slate-600'
@@ -23,11 +41,23 @@ export const POPOVER_SURFACE =
 const SURFACE_HOVER = 'hover:bg-slate-500/10'
 export const ROW_HOVER = 'hover:bg-slate-500/5'
 
-export const CONTROL_BUTTON = `${CONTROL_BASE} inline-flex items-center gap-1.5 ${SURFACE_HOVER}`
+export const CONTROL_BUTTON = `${CONTROL_BASE} cursor-pointer inline-flex items-center gap-1.5 ${SURFACE_HOVER}`
 
-/** Toggle pills: a visible resting boundary, a hover state, and an active state that is not colour alone. */
+/**
+ * Toggle pills: a visible resting boundary, a hover state, and an active state that is not colour
+ * alone.
+ *
+ * `cursor-pointer` is explicit because Tailwind v4's preflight no longer supplies it and no browser
+ * gives a `<button>` a hand cursor on its own — without this every button in the app reads as
+ * static text under the mouse. Measured, not assumed: 22 of them did.
+ *
+ * `focus-visible` rather than `focus`, so the ring appears for keyboard users and does not flash
+ * on every mouse click. Disabled buttons say so with the cursor as well as the opacity.
+ */
 export const PILL_BASE =
-  'h-8 inline-flex items-center gap-1 rounded-md border px-2 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50'
+  'h-8 inline-flex cursor-pointer items-center gap-1 rounded-md border px-2 text-xs font-medium ' +
+  'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ' +
+  'disabled:cursor-not-allowed disabled:opacity-40'
 
 export const PILL_RESTING =
   `border-slate-400/60 dark:border-slate-500/50 text-slate-700 dark:text-slate-300 ${SURFACE_HOVER}`

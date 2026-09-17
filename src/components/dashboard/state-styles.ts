@@ -15,12 +15,12 @@ export const STATE_STYLES: Record<IssueState, StateStyle> = {
   },
   REGRESSED: {
     label: 'Regressed',
-    badge: 'bg-orange-500/15 text-orange-700 dark:text-orange-300 ring-orange-500/30',
+    badge: 'bg-orange-500/15 text-orange-800 dark:text-orange-300 ring-orange-500/30',
     fill: 'fill-orange-500',
   },
   SURGING: {
     label: 'Surging',
-    badge: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 ring-amber-500/30',
+    badge: 'bg-amber-500/15 text-amber-800 dark:text-amber-300 ring-amber-500/30',
     fill: 'fill-amber-500',
   },
   CHRONIC: {

@@ -28,6 +28,8 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   SENTRY_UPSTREAM: 502,
   SENTRY_TIMEOUT: 504,
   SENTRY_SCHEMA: 502,
+  // Not a failure of anything upstream: the app declined to spend more.
+  AGENT_BUDGET: 429,
 }
 
 export function describeFailure(error: unknown): FailureResult {

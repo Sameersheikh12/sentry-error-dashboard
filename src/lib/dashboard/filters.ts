@@ -99,6 +99,80 @@ export function activeFilterCount(filters: DashboardFilters): number {
   ].filter(Boolean).length
 }
 
+/**
+ * One entry per applied filter value, each with the change that removes just that one.
+ *
+ * Built here rather than in the component so the chips cannot drift from `activeFilterCount`:
+ * a filter that counts but has no chip is one the reader can see but not remove.
+ */
+export interface AppliedFilter {
+  id: string
+  label: string
+  value: string
+  /** The change that clears this one value, to hand straight to the existing navigation. */
+  clear: Partial<DashboardFilters>
+}
+
+export function describeActiveFilters(filters: DashboardFilters): AppliedFilter[] {
+  const applied: AppliedFilter[] = []
+
+  if (filters.environment !== undefined) {
+    applied.push({
+      id: 'environment',
+      label: 'env',
+      value: filters.environment === ALL_ENVIRONMENTS ? 'all environments' : filters.environment,
+      clear: { environment: undefined },
+    })
+  }
+
+  for (const state of filters.states) {
+    applied.push({
+      id: `state:${state}`,
+      label: 'state',
+      value: state.toLowerCase(),
+      clear: { states: filters.states.filter((entry) => entry !== state) },
+    })
+  }
+
+  for (const level of filters.levels) {
+    applied.push({
+      id: `level:${level}`,
+      label: 'level',
+      value: level,
+      clear: { levels: filters.levels.filter((entry) => entry !== level) },
+    })
+  }
+
+  if (filters.release) {
+    applied.push({
+      id: 'release',
+      label: 'release',
+      value: filters.release,
+      clear: { release: undefined },
+    })
+  }
+
+  if (filters.search) {
+    applied.push({
+      id: 'search',
+      label: 'search',
+      value: filters.search,
+      clear: { search: undefined },
+    })
+  }
+
+  if (filters.grouping === 'none') {
+    applied.push({
+      id: 'grouping',
+      label: 'grouping',
+      value: 'one row per issue',
+      clear: { grouping: analysisConfig.groupingDimension },
+    })
+  }
+
+  return applied
+}
+
 export function clearedFilters(filters: DashboardFilters): DashboardFilters {
   return {
     ...filters,

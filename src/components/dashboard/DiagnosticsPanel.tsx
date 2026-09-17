@@ -1,5 +1,5 @@
 import type { AnalysisDiagnostics } from '@/lib/analysis/diagnose'
-import { FAINT_TEXT, MUTED_TEXT } from './controls'
+import { FAINT_TEXT, MUTED_TEXT, REFERENCE_SURFACE } from './controls'
 import { formatCount } from './format'
 
 /**
@@ -23,7 +23,7 @@ export function DiagnosticsPanel({
   ]
 
   return (
-    <details className="rounded-lg border border-slate-500/25">
+    <details className={REFERENCE_SURFACE}>
       <summary className={`cursor-pointer list-none px-3 py-2 text-xs font-semibold uppercase tracking-wide ${MUTED_TEXT} hover:bg-slate-500/5`}>
         Diagnostics — state distribution and grouping
       </summary>

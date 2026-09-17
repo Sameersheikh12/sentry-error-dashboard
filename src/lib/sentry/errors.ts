@@ -10,6 +10,7 @@ export type ErrorCode =
   | 'SENTRY_UPSTREAM'
   | 'SENTRY_TIMEOUT'
   | 'SENTRY_SCHEMA'
+  | 'AGENT_BUDGET'
 
 export function newCorrelationId(): string {
   return randomUUID().replace(/-/g, '').slice(0, 8)
@@ -69,6 +70,18 @@ export class SentryUpstreamError extends AppError {
 
 export class SentryTimeoutError extends AppError {
   readonly code = 'SENTRY_TIMEOUT' as const
+}
+
+/**
+ * The dashboard has spent as much on agent runs as it is willing to. Deliberately its own code:
+ * "stopped on purpose, here is the number" must not read like "something broke".
+ */
+export class AgentBudgetExhaustedError extends AppError {
+  readonly code = 'AGENT_BUDGET' as const
+
+  constructor(userMessage: string, options: AppErrorOptions = {}) {
+    super(userMessage, userMessage, options)
+  }
 }
 
 export class SentrySchemaError extends AppError {

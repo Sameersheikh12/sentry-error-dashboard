@@ -117,7 +117,8 @@ export function ProblemTable({
   return (
     <div className="space-y-4">
       <p className={`text-xs tabular-nums ${FAINT_TEXT}`}>
-        Showing {problems.length} of {total} problems
+        Showing {needsAttention.length} of {total} problems
+        {background.length > 0 && ` · ${background.length} running as usual`}
         {lowSignalProblems.length > 0 && ` · ${lowSignalProblems.length} below threshold`}
       </p>
 

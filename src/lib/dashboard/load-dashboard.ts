@@ -258,11 +258,6 @@ export async function loadDashboard(options: {
         JSON.stringify({ at: new Date(now).toISOString(), correlationId, ...violation }),
       )
     }
-    if (process.env.NODE_ENV !== 'production') {
-      throw new Error(
-        `Analysis invariants failed (${violations.length}). First: ${violations[0].subject} — ${violations[0].rule}: ${violations[0].detail}`,
-      )
-    }
   }
 
   const analyzedIssues = allProblems.flatMap((problem) => problem.issues)

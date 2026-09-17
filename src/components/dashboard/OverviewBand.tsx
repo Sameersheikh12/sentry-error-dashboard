@@ -30,7 +30,7 @@ function Metric({
   return (
     <div className="min-w-36 flex-1 sm:flex-none">
       <p className={`text-[11px] font-semibold uppercase tracking-wide ${MUTED_TEXT}`}>{label}</p>
-      <p className="text-2xl font-semibold tabular-nums">
+      <p className="text-xl font-semibold tabular-nums">
         {prefix}
         {formatCount(metric.current)}
       </p>
